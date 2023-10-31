@@ -2,7 +2,7 @@ const express = require("express");
 const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
 const useragent = require('express-useragent');
-const {connectMongo} = require("./config/mongo")
+const {connectMongo, mongoConnectionURL} = require("./config/mongo")
 
 
 const appController = require("./controllers/appController");
@@ -15,7 +15,7 @@ connectMongo()
     app.use(useragent.express());
     
     const store = new MongoDBStore({
-      uri: "mongodb://localhost:27017",
+      uri: mongoConnectionURL,
       collection: "mySessions",
     });
     
@@ -29,7 +29,7 @@ connectMongo()
         saveUninitialized: false,
         store: store,
         cookie: {
-          maxAge: 5 * 1000, // 2 hours in milliseconds
+          maxAge: 5 * 60 * 1000, // 5 hours in milliseconds
         },
       })
     );
