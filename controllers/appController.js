@@ -59,8 +59,26 @@ exports.login_post = async (req, res) => {
   const result = await global.mongodb.collection("mySessions").countDocuments({"session.username": user.username})
 
   if(result >= 4){
-    req.session.error = "User already logged in 3 devices";
-    return res.redirect("/login");
+    const oldestSession = await global.mongodb.collection("mySessions")
+    .find({"session.username": user.username})
+    .sort({ "session.lastUsedDate": 1 }) 
+    .limit(1) 
+    .toArray();
+  
+  if (oldestSession.length > 0) {
+    const oldestSessionId = oldestSession[0]._id;
+    
+    // Delete the oldest session record
+    const deleteResult = await global.mongodb.collection("mySessions").deleteOne({ "_id": oldestSessionId });
+    
+    if (deleteResult.deletedCount === 1) {
+      console.log("Deleted the oldest session record");
+    } else {
+      console.log("Failed to delete the oldest session record");
+    }
+  } else {
+    console.log("No matching session records found for the given username");
+  }
   }
 
   req.session.isAuth = true;
